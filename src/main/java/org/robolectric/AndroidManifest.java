@@ -135,7 +135,9 @@ public class AndroidManifest {
       Document manifestDocument = db.parse(inputStream);
       inputStream.close();
 
-      packageName = getTagAttributeText(manifestDocument, "manifest", "package");
+      if (packageName == null) {
+        packageName = getTagAttributeText(manifestDocument, "manifest", "package");
+      }
       versionCode = getTagAttributeIntValue(manifestDocument, "manifest", "android:versionCode", 0);
       versionName = getTagAttributeText(manifestDocument, "manifest", "android:versionName");
       rClassName = packageName + ".R";
@@ -270,6 +272,10 @@ public class AndroidManifest {
   public String getPackageName() {
     parseAndroidManifest();
     return packageName;
+  }
+
+  public void setPackageName(String packageName) {
+    this.packageName = packageName;
   }
 
   public int getVersionCode() {

@@ -58,12 +58,21 @@ public @interface Config {
    */
   Class<?>[] shadows() default {};
 
+  /**
+   * The package name to use as a replacement of the package name found in the manifest file.
+   *
+   * Common usage of this attribute is when you are testing a Gradle build variant which uses
+   * {@code packageNameSuffix}.
+   */
+  String packageName() default DEFAULT;
+
   public class Implementation implements Config {
     private final int emulateSdk;
     private final String manifest;
     private final String qualifiers;
     private final int reportSdk;
     private final Class<?>[] shadows;
+    private final String packageName;
 
     public static Config fromProperties(Properties configProperties) {
       if (configProperties == null || configProperties.size() == 0) return null;
@@ -72,7 +81,8 @@ public @interface Config {
           configProperties.getProperty("manifest", DEFAULT),
           configProperties.getProperty("qualifiers", ""),
           Integer.parseInt(configProperties.getProperty("reportSdk", "-1")),
-          parseClasses(configProperties.getProperty("shadows", ""))
+          parseClasses(configProperties.getProperty("shadows", "")),
+          configProperties.getProperty("packageName", DEFAULT)
       );
     }
 
@@ -90,12 +100,13 @@ public @interface Config {
       return classes;
     }
 
-    public Implementation(int emulateSdk, String manifest, String qualifiers, int reportSdk, Class<?>[] shadows) {
+    public Implementation(int emulateSdk, String manifest, String qualifiers, int reportSdk, Class<?>[] shadows, String packageName) {
       this.emulateSdk = emulateSdk;
       this.manifest = manifest;
       this.qualifiers = qualifiers;
       this.reportSdk = reportSdk;
       this.shadows = shadows;
+      this.packageName = packageName;
     }
 
     public Implementation(Config baseConfig, Config overlayConfig) {
@@ -107,6 +118,7 @@ public @interface Config {
       shadows.addAll(Arrays.asList(baseConfig.shadows()));
       shadows.addAll(Arrays.asList(overlayConfig.shadows()));
       this.shadows = shadows.toArray(new Class[shadows.size()]);
+      this.packageName = pick(baseConfig.packageName(), overlayConfig.packageName(), DEFAULT);
     }
 
     private <T> T pick(T baseValue, T overlayValue, T nullValue) {
@@ -133,6 +145,11 @@ public @interface Config {
       return shadows;
     }
 
+    @Override
+    public String packageName() {
+      return packageName;
+    }
+
     @NotNull @Override public Class<? extends Annotation> annotationType() {
       return Config.class;
     }
@@ -148,6 +165,7 @@ public @interface Config {
       if (reportSdk != other.reportSdk) return false;
       if (!qualifiers.equals(other.qualifiers)) return false;
       if (!Arrays.equals(shadows, other.shadows)) return false;
+      if (packageName != other.packageName) return false;
 
       return true;
     }
@@ -158,6 +176,7 @@ public @interface Config {
       result = 31 * result + qualifiers.hashCode();
       result = 31 * result + reportSdk;
       result = 31 * result + Arrays.hashCode(shadows);
+      result = 31 * result + packageName.hashCode();
       return result;
     }
   }

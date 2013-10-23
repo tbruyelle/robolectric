@@ -326,6 +326,9 @@ public class RobolectricTestRunner extends BlockJUnit4ClassRunner {
       if (appManifest == null) {
         long startTime = System.currentTimeMillis();
         appManifest = createAppManifest(manifestFile, resDir, assetsDir);
+        if (!config.packageName().equals(Config.DEFAULT)) {
+            appManifest.setPackageName(config.packageName());
+        }
         if (DocumentLoader.DEBUG_PERF)
           System.out.println(String.format("%4dms spent in %s", System.currentTimeMillis() - startTime, manifestFile));
 
